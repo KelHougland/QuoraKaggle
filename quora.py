@@ -1,3 +1,4 @@
+#%% IMPORT MODULES AND FILES
 import numpy as np
 import pandas as pd
 import string
@@ -19,10 +20,9 @@ news_path = 'input/GoogleNews-vectors-negative300.bin'
 # test = pd.read_csv('../input/test.csv')
 train = pd.read_csv('input/train.csv')
 test = pd.read_csv('input/test.csv')
-
-#%%
 embeddings_index = KeyedVectors.load_word2vec_format(news_path, binary=True)
 
+#%% DEFINE FUNCTIONS
 
 def build_vocab(sentences, verbose = True):
     vocab = {}
@@ -84,12 +84,6 @@ def clean_numbers(x):
     x = re.sub('[0-9]{2,}', '##', x)
     return x
 
-sentences = train["question_text"].progress_apply(lambda x: x.split()).values
-
-vocab = build_vocab(sentences)
-print({k: vocab[k] for k in list(vocab)[:5]})
-
-
 mispell_dict = {'colour':'color',
                 'centre':'center',
                 'didnt':'did not',
@@ -119,18 +113,34 @@ mispell_dict = {'colour':'color',
 mispellings, mispellings_re = _get_mispell(mispell_dict)
 
 
+#%% CLEAN TEXT
 
+sentences = train["question_text"].progress_apply(lambda x: x.split()).values
+
+vocab = build_vocab(sentences)
+print({k: vocab[k] for k in list(vocab)[:5]})
+
+
+
+train["question_text"] = train["question_text"].progress_apply(lambda x: clean_text(x))
+train["question_text"] = train["question_text"].progress_apply(lambda x: clean_numbers(x))
 train["question_text"] = train["question_text"].progress_apply(lambda x: replace_typical_misspell(x))
 sentences = train["question_text"].progress_apply(lambda x: x.split())
-to_remove = ['a','to','of','and']
-sentences = [[word for word in sentence if not word in to_remove] for sentence in tqdm(sentences)]
+
 vocab = build_vocab(sentences)
-
-
 oov = check_coverage(vocab, embeddings_index)
+
+# REMOVING ALL OUTSIDE WORDS TAKES FOREVER
+# to_remove = [pair[0] for pair in oov]
+
+# sentences = [[word for word in sentence if not word in to_remove] for sentence in tqdm(sentences)]
+
+# vocab = build_vocab(sentences)
+
+# oov = check_coverage(vocab, embeddings_index)
 oov[:10]
 
-sentences = [[word for word in sentence if not word in oov[0]] for sentence in tqdm(sentences)]
+
 
 
 #%%
