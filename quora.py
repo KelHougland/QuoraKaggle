@@ -2,13 +2,12 @@ import numpy as np
 import pandas as pd
 import string
 from tqdm import tqdm
-import os
+#import os
 from gensim.models import KeyedVectors
 import operator
 import re
 
-print(os.listdir("../input"))
-
+#print(os.listdir("../input"))
 
 
 tqdm.pandas()
@@ -21,6 +20,7 @@ news_path = 'input/GoogleNews-vectors-negative300.bin'
 train = pd.read_csv('input/train.csv')
 test = pd.read_csv('input/test.csv')
 
+#%%
 embeddings_index = KeyedVectors.load_word2vec_format(news_path, binary=True)
 
 
@@ -130,7 +130,13 @@ vocab = build_vocab(sentences)
 oov = check_coverage(vocab, embeddings_index)
 oov[:10]
 
+sentences = [[word for word in sentence if not word in oov[0]] for sentence in tqdm(sentences)]
 
+
+#%%
+
+
+#%%
 
 train['preLength'] = train['question_text'].apply(len)
 test['preLength'] = test['question_text'].apply(len)
@@ -163,6 +169,8 @@ messages = pd.concat([train['question_text'],test['question_text']])
 
 #X = X.drop('question_text', axis=1)
 #test = test.drop('question_text', axis=1)
+
+
 
 bow_transformer = CountVectorizer(analyzer=cleanString).fit(messages)
 print(len(bow_transformer.vocabulary_))
