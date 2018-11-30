@@ -7,6 +7,7 @@ from tqdm import tqdm
 from gensim.models import KeyedVectors
 import operator
 import re
+from sklearn.naive_bayes import MultinomialNB
 
 #print(os.listdir("../input"))
 
@@ -144,8 +145,35 @@ oov[:10]
 
 
 #%%
+#Next steps: make this into a function
+all_sentences = []
 
+for sentence in sentences:
+    word_list = []
+    for word in sentence:
+        try:
+            word_list.append(embeddings_index[word])
+        except KeyError:
+            pass
+    if word_list:
+        sentence_vector = np.mean(word_list,axis=0)
+    else:
+        #we did this because there was one row in the training data that was 
+        #empty which ruined the shapes for the Multinomial NB later
+        sentence_vector = np.zeros(300) 
+    all_sentences.append(sentence_vector)
+    
+#%%
 
+target = np.array(train['target'])
+target = target.reshape(-1,1)
+
+all_sentences_array = np.array(all_sentences)
+
+quoModNB = MultinomialNB(fit_prior=True).fit(all_sentences_array,train['target'])
+
+#%
+#next step: apply the cleaning function to the test data, sentence vectorize the test data, run the model on it, submit
 #%%
 
 train['preLength'] = train['question_text'].apply(len)
